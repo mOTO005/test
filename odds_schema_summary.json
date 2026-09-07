@@ -1,289 +1,56 @@
 {
   "WIN": {
-    "type": "dict",
-    "keys": [
-      "1",
-      "2"
-    ],
-    "samples": {
-      "1": {
-        "type": "dict",
-        "keys": [
-          "01",
-          "02",
-          "03"
-        ],
-        "samples": {
-          "01": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "40.3"
-            }
-          },
-          "02": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "2.9"
-            }
-          },
-          "03": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "142.2"
-            }
-          }
-        }
-      },
-      "2": {
-        "type": "dict",
-        "keys": [
-          "01",
-          "02",
-          "03"
-        ],
-        "samples": {
-          "01": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "5.1"
-            }
-          },
-          "02": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "1.3"
-            }
-          },
-          "03": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "20.2"
-            }
-          }
-        }
-      }
-    }
+    "outer_key": "1",
+    "first_combination_key": "01",
+    "full_value": [
+      "40.3",
+      "0.0",
+      "9"
+    ]
   },
   "QUINELLA": {
-    "type": "dict",
-    "keys": [
-      "4"
-    ],
-    "samples": {
-      "4": {
-        "type": "dict",
-        "keys": [
-          "0102",
-          "0103",
-          "0104"
-        ],
-        "samples": {
-          "0102": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "52.1"
-            }
-          },
-          "0103": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "1,769.1"
-            }
-          },
-          "0104": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "135.1"
-            }
-          }
-        }
-      }
-    }
+    "outer_key": "4",
+    "first_combination_key": "0102",
+    "full_value": [
+      "52.1",
+      "0.0",
+      "18"
+    ]
   },
   "WIDE": {
-    "type": "dict",
-    "keys": [
-      "5"
-    ],
-    "samples": {
-      "5": {
-        "type": "dict",
-        "keys": [
-          "0102",
-          "0103",
-          "0104"
-        ],
-        "samples": {
-          "0102": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "13.3"
-            }
-          },
-          "0103": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "365.4"
-            }
-          },
-          "0104": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "25.4"
-            }
-          }
-        }
-      }
-    }
+    "outer_key": "5",
+    "first_combination_key": "0102",
+    "full_value": [
+      "13.3",
+      "15.5",
+      "18"
+    ]
   },
   "EXACTA": {
-    "type": "dict",
-    "keys": [
-      "6"
-    ],
-    "samples": {
-      "6": {
-        "type": "dict",
-        "keys": [
-          "0102",
-          "0103",
-          "0104"
-        ],
-        "samples": {
-          "0102": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "181.8"
-            }
-          },
-          "0103": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "3,965.9"
-            }
-          },
-          "0104": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "386.9"
-            }
-          }
-        }
-      }
-    }
+    "outer_key": "6",
+    "first_combination_key": "0102",
+    "full_value": [
+      "181.8",
+      "0.0",
+      "49"
+    ]
   },
   "TRIO": {
-    "type": "dict",
-    "keys": [
-      "7"
-    ],
-    "samples": {
-      "7": {
-        "type": "dict",
-        "keys": [
-          "010203",
-          "010204",
-          "010205"
-        ],
-        "samples": {
-          "010203": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "1,556.2"
-            }
-          },
-          "010204": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "126.3"
-            }
-          },
-          "010205": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "3,024.8"
-            }
-          }
-        }
-      }
-    }
+    "outer_key": "7",
+    "first_combination_key": "010203",
+    "full_value": [
+      "1,556.2",
+      "0.0",
+      "226"
+    ]
   },
   "TRIFECTA": {
-    "type": "dict",
-    "keys": [
-      "8"
-    ],
-    "samples": {
-      "8": {
-        "type": "dict",
-        "keys": [
-          "010203",
-          "010204",
-          "010205"
-        ],
-        "samples": {
-          "010203": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "8,950.8"
-            }
-          },
-          "010204": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "1,286.2"
-            }
-          },
-          "010205": {
-            "type": "list",
-            "len": 3,
-            "sample": {
-              "type": "str",
-              "value": "21,663.9"
-            }
-          }
-        }
-      }
-    }
+    "outer_key": "8",
+    "first_combination_key": "010203",
+    "full_value": [
+      "8,950.8",
+      "0.0",
+      "1144"
+    ]
   }
 }
