@@ -8,15 +8,10 @@ for rec in data['records']:
     bt=rec['bet_type']
     if bt in summary: continue
     odds=rec['odds']
-    def desc(x,depth=0):
-        if depth>3: return type(x).__name__
-        if isinstance(x,dict):
-            keys=list(x.keys())[:3]
-            return {'type':'dict','keys':keys,'samples':{k:desc(x[k],depth+1) for k in keys}}
-        if isinstance(x,list):
-            return {'type':'list','len':len(x),'sample':desc(x[0],depth+1) if x else None}
-        return {'type':type(x).__name__,'value':x}
-    summary[bt]=desc(odds)
+    outer_key='1' if bt=='WIN' else rec['api_type']
+    inner=odds[outer_key]
+    first_key=next(iter(inner))
+    summary[bt]={'outer_key':outer_key,'first_combination_key':first_key,'full_value':inner[first_key]}
 
 with open('odds_schema_summary.json','w',encoding='utf-8') as f:
     json.dump(summary,f,ensure_ascii=False,indent=2)
