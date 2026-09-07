@@ -1,4 +1,5 @@
-import csv, json, time
+import csv, json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 import requests
 
@@ -21,26 +22,34 @@ BET_TYPES = {
 
 URL='https://race.netkeiba.com/api/api_get_jra_odds.html'
 HEADERS={'User-Agent':'Mozilla/5.0 (compatible; historical-odds-research/1.0)','Referer':'https://race.netkeiba.com/'}
-s=requests.Session(); s.headers.update(HEADERS)
-records=[]; status=[]
 
-for rid in RACE_IDS:
-    for typ, name in BET_TYPES.items():
-        params={'race_id':rid,'type':typ,'action':'update'}
-        fetched_at=datetime.now(timezone.utc).isoformat()
-        try:
-            r=s.get(URL,params=params,timeout=30)
-            r.raise_for_status()
-            p=r.json()
-            odds=(p.get('data') or {}).get('odds')
-            if odds is None:
-                raise ValueError('data.odds missing')
-            # Persist only odds payload + identifiers; no result/finish/payout fields.
-            records.append({'race_id':rid,'bet_type':name,'api_type':typ,'fetched_at_utc':fetched_at,'odds':odds})
-            status.append([rid,name,'OK',len(json.dumps(odds,ensure_ascii=False)),fetched_at,''])
-        except Exception as e:
-            status.append([rid,name,'ERROR',0,fetched_at,str(e)[:300]])
-        time.sleep(0.35)
+def fetch_one(rid, typ, name):
+    fetched_at=datetime.now(timezone.utc).isoformat()
+    try:
+        r=requests.get(URL,params={'race_id':rid,'type':typ,'action':'update'},headers=HEADERS,timeout=10)
+        r.raise_for_status()
+        p=r.json()
+        odds=(p.get('data') or {}).get('odds')
+        if odds is None:
+            raise ValueError('data.odds missing')
+        rec={'race_id':rid,'bet_type':name,'api_type':typ,'fetched_at_utc':fetched_at,'odds':odds}
+        stat=[rid,name,'OK',len(json.dumps(odds,ensure_ascii=False)),fetched_at,'']
+        return rec, stat
+    except Exception as e:
+        return None, [rid,name,'ERROR',0,fetched_at,str(e)[:300]]
+
+jobs=[(rid,typ,name) for rid in RACE_IDS for typ,name in BET_TYPES.items()]
+records=[]; status=[]
+with ThreadPoolExecutor(max_workers=12) as ex:
+    futs={ex.submit(fetch_one,*j):j for j in jobs}
+    for fut in as_completed(futs):
+        rec, stat=fut.result()
+        status.append(stat)
+        if rec is not None:
+            records.append(rec)
+
+records.sort(key=lambda x:(RACE_IDS.index(x['race_id']), int(x['api_type'])))
+status.sort(key=lambda x:(RACE_IDS.index(x[0]), list(BET_TYPES.values()).index(x[1])))
 
 with open('historical_odds_raw.json','w',encoding='utf-8') as f:
     json.dump({'source':'netkeiba odds API data.odds only','result_fields_saved':False,'records':records},f,ensure_ascii=False,separators=(',',':'))
