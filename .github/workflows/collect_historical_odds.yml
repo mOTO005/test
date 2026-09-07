@@ -1,0 +1,32 @@
+name: Collect historical JRA odds
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/collect_historical_odds.yml'
+      - 'collect_odds.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests
+      - name: Collect odds-only API payloads
+        run: python collect_odds.py
+      - name: Commit odds dataset
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add historical_odds_raw.json historical_odds_status.csv
+          git diff --cached --quiet && exit 0
+          git commit -m 'Collect 30R historical odds raw dataset'
+          git push
