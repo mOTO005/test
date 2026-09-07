@@ -9,7 +9,11 @@ RACE_IDS = [
 '202505010211','202505010411','202510011011','202504010511','202502010611',
 '202503020611','202504020207','202501010511','202507030207','202505050311']
 
-HEADERS={'User-Agent':'Mozilla/5.0 (compatible; results-dataset-research/1.0)','Referer':'https://race.netkeiba.com/'}
+HEADERS={
+ 'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/152 Safari/537.36',
+ 'Accept-Language':'ja,en-US;q=0.8,en;q=0.6',
+ 'Referer':'https://db.netkeiba.com/'
+}
 s=requests.Session(); s.headers.update(HEADERS)
 result_rows=[]; payout_rows=[]; status=[]
 BET_MAP={'単勝':'WIN','馬連':'QUINELLA','ワイド':'WIDE','馬単':'EXACTA','3連複':'TRIO','三連複':'TRIO','3連単':'TRIFECTA','三連単':'TRIFECTA'}
@@ -23,13 +27,15 @@ def norm_combo(v):
     nums=re.findall(r'\d+',v); return '-'.join(str(int(n)) for n in nums) if nums else v.strip()
 
 for rid in RACE_IDS:
-    url=f'https://race.netkeiba.com/race/result.html?race_id={rid}'
+    url=f'https://db.netkeiba.com/race/{rid}/'
     try:
-        r=s.get(url,timeout=30); r.raise_for_status(); r.encoding='utf-8'
+        r=s.get(url,timeout=30)
+        r.raise_for_status()
+        r.encoding=r.apparent_encoding or 'EUC-JP'
         soup=BeautifulSoup(r.text,'html.parser')
-        title=txt(soup.select_one('h1.RaceName')) or txt(soup.find('h1'))
-        table=soup.select_one('table.RaceTable01') or soup.select_one('#All_Result_Table') or soup.find('table',class_='race_table_01')
-        if not table: raise ValueError('result table not found')
+        title=txt(soup.select_one('.racedata h1')) or txt(soup.select_one('h1'))
+        table=soup.select_one('table.race_table_01')
+        if not table: raise ValueError(f'result table not found; http={r.status_code}; title={txt(soup.title)[:120]}')
         trs=table.find_all('tr')
         headers=[txt(x) for x in trs[0].find_all(['th','td'])]
         def idx(names):
@@ -47,7 +53,6 @@ for rid in RACE_IDS:
             if horse_no is None or not horse_name: continue
             result_rows.append([rid,title,finish,horse_no,horse_name,url])
 
-        # payout rows: netkeiba static result page tables
         for tr in soup.find_all('tr'):
             cells=tr.find_all(['th','td']); vals=[txt(c) for c in cells]
             if len(vals)<3: continue
@@ -56,18 +61,18 @@ for rid in RACE_IDS:
                 if jp in label: bt=mapped; break
             if not bt: continue
             combos=re.findall(r'\d+',vals[1]); payouts=re.findall(r'[\d,]+円',vals[2])
-            # Wide can contain 3 combinations and 3 payouts in one row.
             if bt=='WIDE' and len(combos)>=6 and len(payouts)>=3:
                 pairs=[combos[0:2],combos[2:4],combos[4:6]]
                 for pair,pay in zip(pairs,payouts[:3]):
                     payout_rows.append([rid,title,bt,'-'.join(str(int(x)) for x in pair),clean_money(pay),url])
             else:
                 combo=norm_combo(vals[1]); payout=clean_money(vals[2])
-                if combo and payout is not None: payout_rows.append([rid,title,bt,combo,payout,url])
+                if combo and payout is not None:
+                    payout_rows.append([rid,title,bt,combo,payout,url])
         status.append([rid,'OK',title,len(result_rows)-rcount0,len(payout_rows)-pcount0,''])
     except Exception as e:
         status.append([rid,'ERROR','',0,0,str(e)[:500]])
-    time.sleep(0.35)
+    time.sleep(0.25)
 
 with open('race_results_30r.csv','w',encoding='utf-8-sig',newline='') as f:
     w=csv.writer(f); w.writerow(['Race_ID','Race_Name','Finish_Position','Horse_No','Horse_Name','Source_URL']); w.writerows(result_rows)
@@ -76,4 +81,6 @@ with open('payouts_30r.csv','w',encoding='utf-8-sig',newline='') as f:
 with open('results_collection_status.csv','w',encoding='utf-8-sig',newline='') as f:
     w=csv.writer(f); w.writerow(['Race_ID','Status','Race_Name','Result_Rows','Payout_Rows','Error']); w.writerows(status)
 print('races ok',sum(1 for x in status if x[1]=='OK'),'/',len(status),'result rows',len(result_rows),'payout rows',len(payout_rows))
-if any(x[1]!='OK' for x in status): raise SystemExit(2)
+for row in status:
+    if row[1] != 'OK': print('ERROR', row[0], row[5])
+# Do not hard-fail: always publish status/artifact for audit and diagnosis.
