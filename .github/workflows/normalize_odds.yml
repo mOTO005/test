@@ -1,0 +1,22 @@
+name: Normalize historical odds
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'normalize_odds.py'
+      - '.github/workflows/normalize_odds.yml'
+permissions:
+  contents: write
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python normalize_odds.py
+      - run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add historical_odds_normalized.csv historical_odds_invalid_rows.csv historical_odds_integrity.csv
+          git diff --cached --quiet && exit 0
+          git commit -m 'Normalize 30R historical odds dataset'
+          git push
