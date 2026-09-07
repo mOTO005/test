@@ -1,0 +1,22 @@
+name: Inspect odds schema
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'inspect_odds.py'
+      - '.github/workflows/inspect_odds.yml'
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python inspect_odds.py
+      - run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add odds_schema_summary.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'Inspect odds payload schema'
+          git push
