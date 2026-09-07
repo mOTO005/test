@@ -19,6 +19,7 @@ result_rows=[]; payout_rows=[]; status=[]
 BET_MAP={'単勝':'WIN','馬連':'QUINELLA','ワイド':'WIDE','馬単':'EXACTA','3連複':'TRIO','三連複':'TRIO','3連単':'TRIFECTA','三連単':'TRIFECTA'}
 
 def txt(x): return x.get_text(' ',strip=True) if x else ''
+def compact(v): return re.sub(r'\s+','',v or '')
 def clean_int(v):
     m=re.search(r'\d+',v.replace(',','')); return int(m.group()) if m else None
 def clean_money(v):
@@ -31,16 +32,22 @@ for rid in RACE_IDS:
     try:
         r=s.get(url,timeout=30)
         r.raise_for_status()
-        r.encoding=r.apparent_encoding or 'EUC-JP'
-        soup=BeautifulSoup(r.text,'html.parser')
+        # db.netkeiba historical pages are EUC-JP family; cp51932 handles common variants.
+        try:
+            html=r.content.decode('euc_jp')
+        except UnicodeDecodeError:
+            html=r.content.decode('cp932',errors='replace')
+        soup=BeautifulSoup(html,'html.parser')
         title=txt(soup.select_one('.racedata h1')) or txt(soup.select_one('h1'))
         table=soup.select_one('table.race_table_01')
         if not table: raise ValueError(f'result table not found; http={r.status_code}; title={txt(soup.title)[:120]}')
         trs=table.find_all('tr')
         headers=[txt(x) for x in trs[0].find_all(['th','td'])]
+        cheaders=[compact(h) for h in headers]
         def idx(names):
-            for n in names:
-                for i,h in enumerate(headers):
+            nn=[compact(n) for n in names]
+            for n in nn:
+                for i,h in enumerate(cheaders):
                     if n==h or n in h: return i
             return None
         i_finish=idx(['着順']); i_no=idx(['馬番']); i_name=idx(['馬名'])
@@ -49,16 +56,16 @@ for rid in RACE_IDS:
         for tr in trs[1:]:
             tds=tr.find_all('td'); vals=[txt(x) for x in tds]
             if not vals or max(i_finish,i_no,i_name)>=len(vals): continue
-            horse_no=clean_int(vals[i_no]); horse_name=vals[i_name]; finish=vals[i_finish]
+            horse_no=clean_int(vals[i_no]); horse_name=vals[i_name]; finish=compact(vals[i_finish])
             if horse_no is None or not horse_name: continue
             result_rows.append([rid,title,finish,horse_no,horse_name,url])
 
         for tr in soup.find_all('tr'):
             cells=tr.find_all(['th','td']); vals=[txt(c) for c in cells]
             if len(vals)<3: continue
-            label=vals[0].replace(' ',''); bt=None
+            label=compact(vals[0]); bt=None
             for jp,mapped in BET_MAP.items():
-                if jp in label: bt=mapped; break
+                if compact(jp) in label: bt=mapped; break
             if not bt: continue
             combos=re.findall(r'\d+',vals[1]); payouts=re.findall(r'[\d,]+円',vals[2])
             if bt=='WIDE' and len(combos)>=6 and len(payouts)>=3:
@@ -72,7 +79,7 @@ for rid in RACE_IDS:
         status.append([rid,'OK',title,len(result_rows)-rcount0,len(payout_rows)-pcount0,''])
     except Exception as e:
         status.append([rid,'ERROR','',0,0,str(e)[:500]])
-    time.sleep(0.25)
+    time.sleep(0.20)
 
 with open('race_results_30r.csv','w',encoding='utf-8-sig',newline='') as f:
     w=csv.writer(f); w.writerow(['Race_ID','Race_Name','Finish_Position','Horse_No','Horse_Name','Source_URL']); w.writerows(result_rows)
@@ -83,4 +90,3 @@ with open('results_collection_status.csv','w',encoding='utf-8-sig',newline='') a
 print('races ok',sum(1 for x in status if x[1]=='OK'),'/',len(status),'result rows',len(result_rows),'payout rows',len(payout_rows))
 for row in status:
     if row[1] != 'OK': print('ERROR', row[0], row[5])
-# Do not hard-fail: always publish status/artifact for audit and diagnosis.
