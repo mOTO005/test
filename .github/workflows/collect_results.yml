@@ -19,15 +19,16 @@ jobs:
       - run: python collect_results.py
       - uses: actions/upload-artifact@v4
         with:
-          name: results-30r
+          name: results-30r-pdca
           path: |
-            race_results_30r.csv
+            race_results_30r_pdca.csv
+            race_top5_summary_30r.csv
             payouts_30r.csv
             results_collection_status.csv
       - run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add race_results_30r.csv payouts_30r.csv results_collection_status.csv
+          git add race_results_30r_pdca.csv race_top5_summary_30r.csv payouts_30r.csv results_collection_status.csv
           git diff --cached --quiet && exit 0
-          git commit -m 'Collect 30R race results dataset'
+          git commit -m 'Collect PDCA-ready 30R race results dataset'
           git push
