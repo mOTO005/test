@@ -13,6 +13,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python normalize_odds.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: historical-odds-30r
+          path: |
+            historical_odds_normalized.csv
+            historical_odds_invalid_rows.csv
+            historical_odds_integrity.csv
+            historical_odds_status.csv
+          if-no-files-found: error
       - run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
